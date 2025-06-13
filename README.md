@@ -1,2 +1,2 @@
-# users_behaviour_analytics
+# retail_user_behaviour
 Анализ поведения потребителей в ритейле на основе данных из публичного датасета.
