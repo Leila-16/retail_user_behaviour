@@ -1,1 +1,27 @@
+```sql
+WITH full_product_price AS (
+    SELECT 
+        price * quantity AS full_price,
+        customer_id,
+        order_date, 
+        product_id, 
+        payment_method
+    FROM retail_data
+),
 
+full_cheque_price AS (
+    SELECT 
+        SUM(full_price) AS cheque_price,
+        customer_id,
+        order_date, 
+        payment_method
+    FROM full_product_price
+    GROUP BY customer_id, order_date, payment_method
+)
+
+SELECT 
+    payment_method,
+    AVG(cheque_price) AS avg_cheque_price
+FROM full_cheque_price
+GROUP BY payment_method
+```
