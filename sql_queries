@@ -1,3 +1,4 @@
+средний чек по способу платежа
 ```sql
 WITH full_product_price AS (
     SELECT 
