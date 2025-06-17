@@ -1,4 +1,6 @@
-Ушедшие клиенты. Сегментация по общей выручке 
+Ушедшие клиенты. Сегментация по общей выручке:		
+	- high-activity - total sales выше среднего
+ 	- low-activity - total sales ниже среднего
 ```sql
 WITH avg_total_sales AS(
 SELECT
@@ -31,5 +33,10 @@ FROM categorised
 GROUP BY churned_activity
 ```
 
-
+Ушедшие клиенты. Сегментация по лояльности:
+	- loyal: 
+ 		- membership years > 3
+	 	- total_transactions выше среднего
+	  - days_since_last_purchase < 90 - ушли менее 3х мес. назад
+ 
 
