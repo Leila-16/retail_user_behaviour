@@ -79,3 +79,4 @@ SELECT
 FROM churned_segments
 GROUP BY churned_loyalty
 ```
+![image](https://github.com/user-attachments/assets/9b76b2cf-c6ac-4dfd-8fe5-1e2aee1f49cc)
