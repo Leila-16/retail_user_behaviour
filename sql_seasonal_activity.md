@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/034f632a-6c3c-4e5f-b218-034cfb27fbcd)Активность по времени. топ 10 по кол-ву транзакций
+Активность по времени. топ 10 по кол-ву транзакций
 ```sql
 WITH time_blocks_cte AS(
 SELECT
