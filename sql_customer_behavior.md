@@ -26,6 +26,7 @@ FROM users_behavior_data
 WHERE churned = true)
 
 SELECT 
+    churned_activity,
     COUNT(*) FILTER(WHERE churned_activity = 'high_activity_churned') AS high_activity_churned,
     COUNT(*) FILTER(WHERE churned_activity = 'low_activity_churned') AS low_activity_churned,
     ROUND(AVG(avg_transaction_value), 3) AS avg_cheque,
@@ -34,6 +35,8 @@ SELECT
 FROM categorised
 GROUP BY churned_activity
 ```
+<img width="594" alt="image" src="https://github.com/user-attachments/assets/9c5dc6ad-ff7e-41fe-a4e5-1ce83cba9933" />
+
 
 
 
@@ -79,4 +82,5 @@ SELECT
 FROM churned_segments
 GROUP BY churned_loyalty
 ```
-![image](https://github.com/user-attachments/assets/9b76b2cf-c6ac-4dfd-8fe5-1e2aee1f49cc)
+<img width="594" alt="image" src="https://github.com/user-attachments/assets/289e30e8-0976-49c2-a767-b0d791add016" />
+
