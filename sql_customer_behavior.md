@@ -192,3 +192,34 @@ ORDER BY recency_segments_cte.recency_segments;
 
 
 
+Средний LTV по возрастным группам
+```sql
+WITH age_buckets AS(
+SELECT
+    total_sales,
+    total_transactions,
+    churned,
+    CASE
+        WHEN age BETWEEN 18 AND 24 THEN '18-24'
+        WHEN age BETWEEN 25 AND 34 THEN '25-34'
+        WHEN age BETWEEN 35 AND 44 THEN '35-44'
+        WHEN age BETWEEN 45 AND 54 THEN '45-54'
+        WHEN age BETWEEN 55 AND 64 THEN '55-64'
+        ELSE '65+'
+    END AS age_groups
+FROM users_behavior_data)
+
+
+SELECT 
+    age_groups,
+    COUNT(*) AS total_users,
+    ROUND(AVG(total_sales / total_transactions), 2) AS ltv,
+    ROUND(COUNT(*) FILTER(WHERE churned = true)::DECIMAL / COUNT(*), 2)*100 AS churn_rate
+FROM age_buckets
+GROUP BY age_groups
+```
+<img width="370" alt="image" src="https://github.com/user-attachments/assets/acfbf8b9-91fd-4813-9be1-ce1c0e33c3fa" />
+
+
+
+
