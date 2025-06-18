@@ -120,9 +120,75 @@ FROM categorised
 GROUP BY return_type
 ORDER BY return_type 
 ```
-<img width="368" alt="image" src="https://github.com/user-attachments/assets/2d365de8-1f35-4058-a5da-03311d66d206" />
+<img width="369" alt="image" src="https://github.com/user-attachments/assets/c4f35808-dad8-48ae-a32f-28280094c035" />
 
 
 
 
- 
+Сегментация по recency (days_since_last_purchase)
+→ Разделим на сегменты (0–30, 31–90, 91–180, >180 дней).
+
+кол-во пользователей,
+средний чек (avg_transaction_value),
+среднее кол-во покупок (total_transactions),
+любимую категорию (опционально),
+% churned (если хочешь добавить).
+```sql
+WITH recency_segments_cte AS(
+SELECT
+    distance_to_store,
+    avg_transaction_value,
+    total_transactions,
+    churned,
+    product_category,
+    CASE
+        WHEN days_since_last_purchase BETWEEN 0 AND 25 THEN '0-25'
+        WHEN days_since_last_purchase BETWEEN 26 AND 50 THEN '26-50'
+        WHEN days_since_last_purchase BETWEEN 51 AND 75 THEN '51-75'
+        ELSE '76-99'
+    END AS recency_segments
+FROM users_behavior_data),
+
+
+product_category_count AS(
+SELECT
+        recency_segments,
+        product_category,
+        COUNT(*) AS product_count,
+        ROW_NUMBER() OVER (PARTITION BY recency_segments ORDER BY COUNT(*) DESC) AS rn
+FROM recency_segments_cte
+GROUP BY recency_segments, product_category),
+
+
+
+top_categories AS (
+    SELECT
+        recency_segments,
+        product_category AS favourite_category
+    FROM product_category_count
+    WHERE rn = 1
+)
+
+
+
+SELECT
+    recency_segments_cte.recency_segments,
+    COUNT(*) AS customers_number,
+    ROUND(COUNT(*)::DECIMAL / (SELECT COUNT(customer_id) FROM users_behavior_data), 2)*100 AS customers_share,
+    ROUND(COUNT(*) FILTER(WHERE churned = TRUE)::DECIMAL / COUNT(*), 2)*100 AS churn_rate,
+    favourite_category,
+    ROUND(AVG(distance_to_store), 2) AS avg_distance_to_store,
+    ROUND(AVG(avg_transaction_value), 2) AS avg_transaction,
+    ROUND(AVG(total_transactions), 2) AS avg_total_transactions
+FROM recency_segments_cte
+    LEFT JOIN top_categories 
+    ON recency_segments_cte.recency_segments = top_categories.recency_segments
+GROUP BY recency_segments_cte.recency_segments, favourite_category
+ORDER BY recency_segments_cte.recency_segments;
+```
+<img width="1060" alt="image" src="https://github.com/user-attachments/assets/fca7e0ac-7e16-41c4-b5dd-c5c9f432b94a" />
+
+
+
+
+
