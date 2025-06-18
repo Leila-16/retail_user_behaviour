@@ -27,16 +27,14 @@ WHERE churned = true)
 
 SELECT 
     churned_activity,
-    COUNT(*) FILTER(WHERE churned_activity = 'high_activity_churned') AS high_activity_churned,
-    COUNT(*) FILTER(WHERE churned_activity = 'low_activity_churned') AS low_activity_churned,
+    COUNT(*) AS churned_activity_count,
     ROUND(AVG(avg_transaction_value), 3) AS avg_cheque,
     ROUND(AVG(avg_discount_used), 3) AS avg_discount,
     ROUND(AVG(total_returned_value), 3) AS avg_returns
 FROM categorised
 GROUP BY churned_activity
 ```
-<img width="594" alt="image" src="https://github.com/user-attachments/assets/9c5dc6ad-ff7e-41fe-a4e5-1ce83cba9933" />
-
+<img width="594" alt="image" src="https://github.com/user-attachments/assets/4fc78a85-0942-4b7c-a4bb-cfa337af243e" />
 
 
 
