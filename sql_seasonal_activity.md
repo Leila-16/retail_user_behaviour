@@ -28,3 +28,18 @@ LIMIT 10
 
 
 Эффективность разных типов промоакций
+```sql
+SELECT
+    promotion_type,
+    COUNT(*) AS transactions_number,
+    ROUND(COUNT(*)::DECIMAL / (SELECT COUNT(*)
+                                FROM users_behavior_data
+                                WHERE promotion_type IS NOT NULL),2)*100 AS transactions_share,
+    ROUND(AVG(avg_transaction_value), 2) AS avg_cheque,
+    ROUND(AVG(avg_discount_used), 2) AS avg_discount,
+    ROUND(AVG(total_sales / total_transactions), 2) AS avg_ltv
+FROM users_behavior_data
+WHERE promotion_type IS NOT NULL
+GROUP BY promotion_type
+```
+<img width="684" alt="image" src="https://github.com/user-attachments/assets/b74802c9-a01e-42bb-859e-c5bba43f6cbd" />
