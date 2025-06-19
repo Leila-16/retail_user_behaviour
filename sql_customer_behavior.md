@@ -1,7 +1,29 @@
-Ушедшие клиенты. Сегментация по общей выручке:		
-	- high-activity - total sales выше среднего
- 	- low-activity - total sales ниже среднего
-по результатам видно, что обе категории равны => ушло примерно равное количество пользователей с общими покупками выше и ниже среднего
+<div id="user-content-toc">
+  <ul style="list-style: none;">
+    <summary>
+      <h2>Сегментация клиентов: причины оттока, расчет сопутствующих метрик</h2>
+    </summary>
+  </ul>
+</div>
+
+
+---
+### Результаты анализа
+Проведён анализ поведения пользователей в зависимости от временных факторов, сезонности и промоакций.
+
+**Ушедшие покупатели:** по результатам видно, что обе категории равны => ушло примерно равное количество пользователей с общими покупками выше и ниже среднего. 
+По результатам видно, что большая часть ушедших клиентов (92.5%) - не лояльны. Также видно, что возвраты или скидки не влияли на уход - вобеих категориях (лояльные/нет) средние возвраты и скидки примерно равны.
+Пользователи, которые много возвращали. Может, были разочарованы.
+
+**Сезонность:** Гипотеза о том, что семьи с детьми совершают больше покупок летом и осенью в рамках подготовки к школе, не подтвердилась — сезонный всплеск активности практически отсутствует. Однако, у обеих категорий заметно повышение количества покупок зимой, что может быть связано с праздничными покупками. 
+
+**Промоакции:** В целом, промоакции не оказали выраженного влияния на потребительские паттерны. Однако, предложение «Buy one get one free» вызвало наибольший отклик и привело к росту числа транзакций по сравнению с другими видами акций.
+
+---
+### Аналитические запросы
+1. Ушедшие (churned) клиенты. Сегментация по общей выручке:
+	 - high-activity - total sales выше среднего<br>
+	 - low-activity - total sales ниже среднего<br>
 
 ```sql
 WITH avg_total_sales AS(
@@ -10,6 +32,7 @@ SELECT
 FROM users_behavior_data 
 WHERE churned = true    
 ),
+
 
 categorised AS(
 SELECT
@@ -25,6 +48,7 @@ SELECT
 FROM users_behavior_data
 WHERE churned = true)
 
+
 SELECT 
     churned_activity,
     COUNT(*) AS churned_activity_count,
@@ -37,15 +61,15 @@ GROUP BY churned_activity
 <img width="594" alt="image" src="https://github.com/user-attachments/assets/4fc78a85-0942-4b7c-a4bb-cfa337af243e" />
 
 
+---
 
 
-Ушедшие клиенты. Сегментация по лояльности:
-	- loyal: 
- 		- membership years > 3
-	 	- total_transactions выше среднего
-	  - days_since_last_purchase < 90 - ушли менее 3х мес. назад
-
-По результатам видно, что большая часть ушедших клиентов (92.5%) - не лояльны. Также видно, что возвраты или скидки не влияли на уход - вобеих категориях (лояльные/нет) средние возвраты и скидки примерно равны.
+2. Ушедшие (churned) клиенты. Сегментация по лояльности:
+   - Loyal:
+     - membership_years > 3
+     - total_transactions выше среднего
+     - days_since_last_purchase < 90 (ушли менее 3 месяцев назад)
+   - Disloyal: остальные
 
 ```sql
 WITH avg_total_transactions AS(
@@ -83,14 +107,12 @@ GROUP BY churned_loyalty
 <img width="594" alt="image" src="https://github.com/user-attachments/assets/289e30e8-0976-49c2-a767-b0d791add016" />
 
 
+---
 
 
-High Return Rate Churned
-Цель: Пользователи, которые много возвращали. Может, были разочарованы.
-Что использовать:
-	• return_rate = total_returned_value / total_sales;
-	• сравни с медианой или avg;
-	• churned = true.
+3. Ушедшие (churned) клиенты с высокой долей возвратов:
+   - return_rate выше среднего
+
 ```sql
 WITH avg_values AS (
 SELECT
@@ -104,13 +126,14 @@ SELECT
     total_returned_value,
         total_sales,
         total_returned_value / NULLIF(total_sales, 0) AS return_rate,
-    CASE 
-            WHEN total_returned_value / NULLIF(total_sales, 0) > (SELECT avg_return_rate FROM avg_values)
-            THEN 'high_return_churned'
-            ELSE 'other_churned'
-        END AS return_type
-    FROM users_behavior_data
-    WHERE churned = true)
+	CASE
+		WHEN total_returned_value / NULLIF(total_sales, 0) > (SELECT avg_return_rate FROM avg_values)
+		THEN 'high_return_churned'
+		ELSE 'other_churned'
+	END AS return_type
+FROM users_behavior_data
+WHERE churned = true)
+
 
 SELECT 
     return_type,
@@ -123,16 +146,11 @@ ORDER BY return_type
 <img width="369" alt="image" src="https://github.com/user-attachments/assets/c4f35808-dad8-48ae-a32f-28280094c035" />
 
 
+---
 
 
-Сегментация по recency (days_since_last_purchase)
-→ Разделим на сегменты (0–30, 31–90, 91–180, >180 дней).
+4. Сегментация поользователей по количеству дней с последней покупки
 
-кол-во пользователей,
-средний чек (avg_transaction_value),
-среднее кол-во покупок (total_transactions),
-любимую категорию (опционально),
-% churned (если хочешь добавить).
 ```sql
 WITH recency_segments_cte AS(
 SELECT
@@ -160,15 +178,12 @@ FROM recency_segments_cte
 GROUP BY recency_segments, product_category),
 
 
-
 top_categories AS (
     SELECT
         recency_segments,
         product_category AS favourite_category
     FROM product_category_count
-    WHERE rn = 1
-)
-
+    WHERE rn = 1)
 
 
 SELECT
@@ -189,10 +204,11 @@ ORDER BY recency_segments_cte.recency_segments;
 <img width="1060" alt="image" src="https://github.com/user-attachments/assets/fca7e0ac-7e16-41c4-b5dd-c5c9f432b94a" />
 
 
+---
 
 
+5. Средний LTV по возрастным группам
 
-Средний LTV по возрастным группам
 ```sql
 WITH age_buckets AS(
 SELECT
