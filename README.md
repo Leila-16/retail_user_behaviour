@@ -1,10 +1,10 @@
 # Анализ поведения потребителей в ритейле на основе данных из публичного датасета
 
 - Использован публичный датасет [Retail Sales and Customer Behavior Analysis](https://www.kaggle.com/datasets/utkalk/large-retail-data-set-for-eda/data)
-- Составлены аналитические запросы на языке SQL
-- Подготовлены интерактивные дашборды в Tableau
 - Для симуляции разбалансировки удалена часть ушедших (churned) клиентов
-
+- Составлены аналитические запросы на языке SQL:
+	- [users behavior](sql_customers_behavior.md)
+	- [users seasonal activity](sql_seasonal_activity.md)
 ---
 
 ### Результаты анализа:
