@@ -46,7 +46,7 @@ LIMIT 10
 ```
 <img width="372" alt="image" src="https://github.com/user-attachments/assets/c6f37814-8576-4de2-abc5-05f36c2f5151" />
 
-
+---
 
 
 2. Активность пользователей по сезонам в разрезе наличия детей
@@ -103,7 +103,7 @@ ORDER BY k.kids_groups DESC, total_sales DESC;
 <img width="528" alt="image" src="https://github.com/user-attachments/assets/2c5bbc0e-255f-4b24-8807-ce915c8b5375" />
 
 
-
+---
 
 
 3. Эффективность разных типов промоакций
@@ -126,7 +126,7 @@ GROUP BY promotion_type
 ```
 <img width="1002" alt="image" src="https://github.com/user-attachments/assets/b604a3b5-c17d-43cb-9a7b-1a1b0ceb32c8" />
 
-
+---
 
 <h3 align="right"><a name="english-version">English Version</a></h3>
 
@@ -173,7 +173,7 @@ LIMIT 10
 <img width="372" alt="image" src="https://github.com/user-attachments/assets/c6f37814-8576-4de2-abc5-05f36c2f5151" />
 
 
-
+---
 
 2. User Activity by Season, Segmented by Presence of Children
 ```sql
@@ -229,7 +229,7 @@ ORDER BY k.kids_groups DESC, total_sales DESC;
 <img width="528" alt="image" src="https://github.com/user-attachments/assets/2c5bbc0e-255f-4b24-8807-ce915c8b5375" />
 
 
-
+---
 
 
 3. Effectiveness of Different Types of Promotions
