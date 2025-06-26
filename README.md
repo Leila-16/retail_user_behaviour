@@ -9,8 +9,8 @@
 - Использован публичный датасет [Retail Sales and Customer Behavior Analysis](https://www.kaggle.com/datasets/utkalk/large-retail-data-set-for-eda/data)
 - Для симуляции разбалансировки удалена часть ушедших (churned) клиентов
 - Составлены аналитические запросы на языке SQL:
-	- [users behavior](sql_customers_behavior.md)
-	- [users seasonal activity](sql_seasonal_activity.md)
+	- [customers behavior](sql_customers_behavior.md)
+	- [seasonal activity](sql_seasonal_activity.md)
 ---
 
 ### Результаты анализа:
@@ -29,8 +29,8 @@
 - Utilized public dataset [Retail Sales and Customer Behavior Analysis](https://www.kaggle.com/datasets/utkalk/large-retail-data-set-for-eda/data)
 - To simulate class imbalance, a portion of churned customers was removed
 - Developed analytical SQL queries:
-	- [users behavior](sql_customers_behavior.md)
-	- [users seasonal activity](sql_seasonal_activity.md)
+	- [customers behavior](sql_customers_behavior.md)
+	- [seasonal activity](sql_seasonal_activity.md)
 ---
 
 ### Analysis Findings:
