@@ -1,14 +1,15 @@
-<div id="user-content-toc">
-  <ul style="list-style: none;">
-    <summary>
-      <h2>Анализ покупателей по сегментам: поведенческий профиль, причины оттока</h2>
-    </summary>
-  </ul>
-</div>
+<kbd>[RU Русская версия](#русская-версия)</kbd>  
+<kbd>[ENG English Version](#english-version)</kbd>
+
+
+<h3 align="right"><a name="русская-версия">Русская версия</a></h3>
+
+
+# Анализ покупателей по сегментам: поведенческий профиль, причины оттока
+Проведён анализ клиентов, прекративших покупки, с фокусом на LTV, лояльность, recency и возвратность.
 
 ---
 ### Результаты анализа
-Проведён анализ клиентов, прекративших покупки, с фокусом на LTV, лояльность, recency и возвратность.
 
 **Ушедшие покупатели**: Обе группы — активные и неактивные — представлены практически поровну, что свидетельствует о том, что объём покупок и размер скидок не являются причинами оттока. Тем не менее, 92.5% ушедших — это нелояльные клиенты, что подтверждает важность программы лояльности для удержания. Гипотеза, что высокий уровень возвратов влияет на отток, не подтвердилась: только каждый пятый ушедший клиент имел высокий показатель возвратов.
 
@@ -233,6 +234,235 @@ GROUP BY age_groups
 ```
 <img width="370" alt="image" src="https://github.com/user-attachments/assets/acfbf8b9-91fd-4813-9be1-ce1c0e33c3fa" />
 
+---
+<h3 align="right"><a name="english-version">English Version</a></h3>
 
 
+# Customer Segmentation Analysis: Behavioral Profile and Churn Drivers
+An analysis was conducted on customers who stopped purchasing, with a focus on LTV, loyalty, recency, and return behavior.
+
+---
+
+### Key Findings
+
+**Churned Customers:** Both active and inactive user groups are equally represented, indicating that purchase volume and discount levels are not key drivers of churn. However, 92.5% of churned users were classified as disloyal, emphasizing the critical role of loyalty programs in retention. The hypothesis that high return rates impact churn was not supported — only one in five churned customers showed elevated return behavior.
+
+**Recency:** Users purchasing most frequently tend to focus on grocery products. Those shopping less often (once every 2–3 months) typically prefer toys and represent the largest customer segment. Churn rates remain stable across groups. Store proximity appears to have minimal effect on purchase frequency — product category preference is a more significant factor.
+
+**LTV by Age:** The highest customer LTV is observed in the 18–24 age group, which also happens to be the smallest segment. Churn rates are consistently around 42% across all age groups, highlighting the challenge of customer retention regardless of age.
+
+---
+
+### Analytical Queries
+1. Churned Customers — Segmentation by Total Sales:
+	 - High-activity – total sales above average<br>
+	 - Low-activity – total sales below average<br>
+
+```sql
+WITH avg_total_sales AS(
+SELECT
+    AVG(total_sales) AS avg_sales
+FROM users_behavior_data 
+WHERE churned = true    
+),
+
+
+categorised AS(
+SELECT
+    total_sales,
+    churned,
+    avg_transaction_value,
+    avg_discount_used,
+    total_returned_value,
+    CASE 
+        WHEN total_sales > (SELECT avg_sales FROM avg_total_sales) THEN 'high_activity_churned'
+        ELSE 'low_activity_churned'
+    END AS churned_activity
+FROM users_behavior_data
+WHERE churned = true)
+
+
+SELECT 
+    churned_activity,
+    COUNT(*) AS churned_activity_count,
+    ROUND(AVG(avg_transaction_value), 3) AS avg_cheque,
+    ROUND(AVG(avg_discount_used), 3) AS avg_discount,
+    ROUND(AVG(total_returned_value), 3) AS avg_returns
+FROM categorised
+GROUP BY churned_activity
+```
+<img width="594" alt="image" src="https://github.com/user-attachments/assets/4fc78a85-0942-4b7c-a4bb-cfa337af243e" />
+
+---
+
+2. Churned Customers — Segmentation by Loyalty:
+   - Loyal:
+     - membership_years > 3
+     - total_transactions above average
+     - days_since_last_purchase < 90 (churned less than 3 months ago)
+   - Disloyal: all others
+
+```sql
+WITH avg_total_transactions AS(
+SELECT
+    AVG(total_transactions) AS avg_transactions
+FROM users_behavior_data
+),
+
+
+churned_segments AS(
+SELECT 
+    CASE
+        WHEN 
+            membership_years > 3 AND
+            days_since_last_purchase < 90 AND
+            total_transactions > (SELECT avg_transactions FROM avg_total_transactions)
+        THEN 'loyal_churned'
+        ELSE 'disloyal_churned'
+    END AS churned_loyalty,
+    total_returned_value,
+    avg_discount_used
+FROM users_behavior_data
+WHERE churned = TRUE)
+
+
+SELECT
+    churned_loyalty,
+    COUNT(*) AS loyalty_segments,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS segment_share,
+    ROUND(AVG(total_returned_value), 2) AS avg_returns,
+    ROUND(AVG(avg_discount_used), 2) AS avg_discount
+FROM churned_segments
+GROUP BY churned_loyalty
+```
+<img width="594" alt="image" src="https://github.com/user-attachments/assets/289e30e8-0976-49c2-a767-b0d791add016" />
+
+---
+
+
+3. Churned Customers with High Return Rates:
+   - return_rate above average
+
+```sql
+WITH avg_values AS (
+SELECT
+    AVG(total_returned_value / NULLIF(total_sales, 0)) AS avg_return_rate
+FROM users_behavior_data
+WHERE churned = true),
+
+
+categorised AS(
+SELECT
+    total_returned_value,
+        total_sales,
+        total_returned_value / NULLIF(total_sales, 0) AS return_rate,
+	CASE
+		WHEN total_returned_value / NULLIF(total_sales, 0) > (SELECT avg_return_rate FROM avg_values)
+		THEN 'high_return_churned'
+		ELSE 'other_churned'
+	END AS return_type
+FROM users_behavior_data
+WHERE churned = true)
+
+
+SELECT 
+    return_type,
+    COUNT(*) AS number_churned,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS segment_share
+FROM categorised
+GROUP BY return_type
+ORDER BY return_type 
+```
+<img width="369" alt="image" src="https://github.com/user-attachments/assets/c4f35808-dad8-48ae-a32f-28280094c035" />
+
+
+---
+
+
+4. Customer Segmentation by Recency (Number of Days Since Last Purchase)
+
+```sql
+WITH recency_segments_cte AS(
+SELECT
+    distance_to_store,
+    avg_transaction_value,
+    total_transactions,
+    churned,
+    product_category,
+    CASE
+        WHEN days_since_last_purchase BETWEEN 0 AND 25 THEN '0-25'
+        WHEN days_since_last_purchase BETWEEN 26 AND 50 THEN '26-50'
+        WHEN days_since_last_purchase BETWEEN 51 AND 75 THEN '51-75'
+        ELSE '76-99'
+    END AS recency_segments
+FROM users_behavior_data),
+
+
+product_category_count AS(
+SELECT
+        recency_segments,
+        product_category,
+        COUNT(*) AS product_count,
+        ROW_NUMBER() OVER (PARTITION BY recency_segments ORDER BY COUNT(*) DESC) AS rn
+FROM recency_segments_cte
+GROUP BY recency_segments, product_category),
+
+
+top_categories AS (
+    SELECT
+        recency_segments,
+        product_category AS favourite_category
+    FROM product_category_count
+    WHERE rn = 1)
+
+
+SELECT
+    recency_segments_cte.recency_segments,
+    COUNT(*) AS customers_number,
+    ROUND(COUNT(*)::DECIMAL / (SELECT COUNT(customer_id) FROM users_behavior_data), 2)*100 AS customers_share,
+    ROUND(COUNT(*) FILTER(WHERE churned = TRUE)::DECIMAL / COUNT(*), 2)*100 AS churn_rate,
+    favourite_category,
+    ROUND(AVG(distance_to_store), 2) AS avg_distance_to_store,
+    ROUND(AVG(avg_transaction_value), 2) AS avg_transaction,
+    ROUND(AVG(total_transactions), 2) AS avg_total_transactions
+FROM recency_segments_cte
+    LEFT JOIN top_categories 
+    ON recency_segments_cte.recency_segments = top_categories.recency_segments
+GROUP BY recency_segments_cte.recency_segments, favourite_category
+ORDER BY recency_segments_cte.recency_segments;
+```
+<img width="1060" alt="image" src="https://github.com/user-attachments/assets/fca7e0ac-7e16-41c4-b5dd-c5c9f432b94a" />
+
+
+---
+
+
+5. Average LTV by Age Group
+
+```sql
+WITH age_buckets AS(
+SELECT
+    total_sales,
+    total_transactions,
+    churned,
+    CASE
+        WHEN age BETWEEN 18 AND 24 THEN '18-24'
+        WHEN age BETWEEN 25 AND 34 THEN '25-34'
+        WHEN age BETWEEN 35 AND 44 THEN '35-44'
+        WHEN age BETWEEN 45 AND 54 THEN '45-54'
+        WHEN age BETWEEN 55 AND 64 THEN '55-64'
+        ELSE '65+'
+    END AS age_groups
+FROM users_behavior_data)
+
+
+SELECT 
+    age_groups,
+    COUNT(*) AS total_users,
+    ROUND(AVG(total_sales / total_transactions), 2) AS ltv,
+    ROUND(COUNT(*) FILTER(WHERE churned = true)::DECIMAL / COUNT(*), 2)*100 AS churn_rate
+FROM age_buckets
+GROUP BY age_groups
+```
+<img width="370" alt="image" src="https://github.com/user-attachments/assets/acfbf8b9-91fd-4813-9be1-ce1c0e33c3fa" />
 
